@@ -1,0 +1,106 @@
+// cpp · overlay_panel.cpp · Android Mobile (Free Fire / Jogos de Tiro) · NDK / Clang
+#include <jni.h>// java · MainActivity.java · Interface Gráfica Flutuante Android
+package com.example.modmenu;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.widget.Switch;
+import android.widget.LinearLayout;
+import android.graphics.PixelFormat;
+import android.view.WindowManager;
+import android.view.Gravity;
+
+public class MainActivity extends Activity {
+    
+    // Carrega a biblioteca nativa C++
+    static {
+        System.loadLibrary("modpanel");
+    }
+
+    public native void toggleFeature(int id, boolean enable);
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+
+        // Criação dinâmica dos botões do menu flutuante
+        addSwitch(layout, "Otimização de Desempenho", 1);
+        addSwitch(layout, "Aimbot Padrão", 2);
+        addSwitch(layout, "Aimbot Legit (FOV Reduzido)", 3);
+        addSwitch(layout, "ESP Box", 4);
+        addSwitch(layout, "ESP Vida", 5);
+
+        setContentView(layout);
+    }
+
+    private void addSwitch(LinearLayout parent, String title, final int id) {
+        Switch sw = new Switch(this);
+        sw.setText(title);
+        sw.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            toggleFeature(id, isChecked);
+        });
+        parent.addView(sw);
+    }
+}
+
+#include <android/log.h>
+#include <GLES3/gl3.h>
+#include <iostream>
+#include <vector>
+
+#define LOG_TAG "ModPanel"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+
+// Estrutura de configuração das funções do painel
+struct PanelConfig {
+    bool optimization = false;
+    bool aimbot = false;
+    bool aimbot_legit = false;
+    bool esp_box = false;
+    bool esp_life = false;
+};
+
+static PanelConfig current_config;
+
+// Funções de controle do painel
+extern "C" JNIEXPORT void JNICALL
+Java_com_example_modmenu_Overlay_toggleFeature(JNIEnv* env, jobject thiz, jint feature_id, jboolean enable) {
+    switch (feature_id) {
+        case 1:
+            current_config.optimization = enable;
+            LOGI("Otimização do sistema: %s", enable ? "ATIVADO" : "DESATIVADO");
+            break;
+        case 2:
+            current_config.aimbota = enable;
+            LOGI("Aimbot Rispido: %s", enable ? "ATIVADO" : "DESATIVADO");
+            break;
+        case 3:
+            current_config.aimbot_legit = enable;
+            LOGI("Aimbot Legit (Suave): %s", enable ? "ATIVADO" : "DESATIVADO");
+            break;
+        case 4:
+            current_config.esp_box = enable;
+            LOGI("ESP Box: %s", enable ? "ATIVADO" : "DESATIVADO");
+            break;
+        case 5:
+            current_config.esp_life = enable;
+            LOGI("ESP Vida: %s", enable ? "ATIVADO" : "DESATIVADO");
+            break;
+        default:
+            break;
+    }
+}
+
+// Renderização gráfica básica via OpenGL ES para sobreposição (ESP)
+extern "C" JNIEXPORT void JNICALL
+Java_com_example_modmenu_Overlay_renderOverlay(JNIEnv* env, jobject thiz) {
+    if (current_config.esp_box) {
+        // Lógica de desenho da caixa ao redor do alvo (World-to-Screen)
+    }
+    if (current_config.esp_life) {
+        // Lógica de desenho da barra de HP do oponente
+    }
+}
